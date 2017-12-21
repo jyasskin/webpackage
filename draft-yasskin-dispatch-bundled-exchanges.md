@@ -268,14 +268,17 @@ this set of requests with each request's adjusted offset and length attached.
 
 To parse the manifest section, starting at offset *manifest-start*, the parser
 MUST load a CBOR item starting at *manifest-start*. If this item isn't a valid
-request item, as defined by {{request-items}}, the parser MUST fail.
+byte string containing an absolute URI (Section 4.3 of {{!RFC3986}}), the parser
+MUST fail.
 
 ~~~ cddl
-manifest = http-request
+manifest = bstr
 ~~~
 
-Return the request represented by this parsed item, interpreted as defined by
-{{request-items}}.
+Return the loaded URI.
+
+Note: A bundle could contain several exchanges for this URI. The client loading
+the bundle can use content negotiation to select the best one.
 
 ### Parsing the critical section {#critical-section}
 

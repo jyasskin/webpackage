@@ -20,6 +20,7 @@ TAG's Web Packaging Draft](https://w3ctag.github.io/packaging-on-the-web/)~~.
   - [Privacy-preserving prefetch](#privacy-preserving-prefetch)
   - [Packaged Web Publications](#packaged-web-publications)
   - [Third-party security review](#third-party-security-review)
+- [Loading sketch](#loading-sketch)
 - [FAQ](#faq)
   - [Why signing but not encryption? HTTPS provides both...](#why-signing-but-not-encryption-https-provides-both)
   - [What if a publisher accidentally signs a non-public resource?](#what-if-a-publisher-accidentally-signs-a-non-public-resource)
@@ -60,6 +61,10 @@ draft](https://tools.ietf.org/html/draft-yasskin-http-origin-signed-responses))
 allows a publisher to sign their HTTP exchanges and intermediates to forward
 those exchanges without breaking the signatures.
 
+We publish [periodic snapshots of this
+draft](https://tools.ietf.org/html/draft-yasskin-httpbis-origin-signed-exchanges-impl)
+so that test implementations can interoperate.
+
 These signatures can be used in three related ways:
 
 1. When signed by a certificate that meets roughly the TLS server certificate
@@ -72,9 +77,15 @@ These signatures can be used in three related ways:
 3. When signed by a raw public key, the signatures enable [signature-based
    subresource integrity](https://github.com/mikewest/signature-based-sri).
 
-We publish [periodic snapshots of this
-draft](https://tools.ietf.org/html/draft-yasskin-httpbis-origin-signed-exchanges-impl)
-so that test implementations can interoperate.
+Signed exchanges can also be sent to a client in three ways:
+
+1. Using a `Signature` header in a normal HTTP response. This way is used for
+   non-origin signatures and to provide an origin-trusted signature to
+   intermediates.
+1. Enveloped into the `application/signed-exchange` content type. In this case,
+   the signed exchange has both the logical URL of its embedded request, and the
+   physical URL of the envelope itself.
+1. In an HTTP/2-Pushed exchange.
 
 ### Bundled exchanges
 
@@ -87,16 +98,22 @@ just file contents. It will probably incorporate compression to shrink headers,
 and even in compressed bundles will allow random access to resources without
 uncompressing other resources, like Zip rather than Gzipped Tar. It will be able
 to include [signed exchanges](#signed-http-exchanges) from multiple origins and
-will probably incorporate an optimization to reduce the number of public key
-operations for bundles containing many such signatures.
+will allow signers to sign a group of contained exchanges as a unit, both to
+optimize the number of public key operations and to prevent attackers from
+mixing versions of resources.
 
 Bundles will probably also include a way to depend on other bundles by reference
 without directly including their content.
+
+Like enveloped signed exchanges, bundles have a physical URL in addition to the
+logical URLs of their contained exchanges.
 
 <a id="loading"></a>
 ### Loading specification
 
 We'll need to specify how browsers load both signed exchanges and bundles of exchanges.
+
+For now, this explainer has [a sketch of how loading will work](#loading-sketch).
 
 ## Use cases
 
@@ -214,6 +231,23 @@ log](https://www.certificate-transparency.org/general-transparency). The
 third-party then signs either the exchanges in a package or the package as a
 whole using a certificate whose metadata reflects whichever property was
 reviewed for.
+
+## Loading sketch
+
+When an envelope or bundle is prefetched (`<link rel="prefetch">`), that action
+alone cannot fill the HTTP cache for the logical URL(s), because that allows a
+logical URL's origin to determine that it was prefetched, which sacrifices the
+[privacy-preserving prefetch](#privacy-preserving-prefetch) use case.
+
+Navigating to a signed exchange or using it as a subresource is equivalent to
+loading its physical URL, `<link rel="preload">`ing the contained exchange for
+the logical URL, and then doing a 302 redirect to its logical URL. (TODO:
+double-check that this is exactly right instead of approximate.)
+
+When an envelope is navigated to or used as a sub-resource, that does fill the
+HTTP cache for the logical URL. Similarly, when a bundle is navigated to or used
+as a sub-resource, that fills the HTTP cache for all contained signed or
+same-origin logical URLs.
 
 ## FAQ
 

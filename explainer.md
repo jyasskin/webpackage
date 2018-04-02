@@ -21,6 +21,7 @@ TAG's Web Packaging Draft](https://w3ctag.github.io/packaging-on-the-web/)~~.
   - [Packaged Web Publications](#packaged-web-publications)
   - [Third-party security review](#third-party-security-review)
 - [Loading sketch](#loading-sketch)
+  - [Content-Disposition](#content-disposition)
 - [FAQ](#faq)
   - [Why signing but not encryption? HTTPS provides both...](#why-signing-but-not-encryption-https-provides-both)
   - [What if a publisher accidentally signs a non-public resource?](#what-if-a-publisher-accidentally-signs-a-non-public-resource)
@@ -248,6 +249,12 @@ When an envelope is navigated to or used as a sub-resource, that does fill the
 HTTP cache for the logical URL. Similarly, when a bundle is navigated to or used
 as a sub-resource, that fills the HTTP cache for all contained signed or
 same-origin logical URLs.
+
+### Content-Disposition
+
+`Content-Disposition: attachment` has its usual effect: the resource is saved to
+a file. The source of the download, for platforms that can record such a thing,
+is the signed request URL, not the physical URL.
 
 ## FAQ
 

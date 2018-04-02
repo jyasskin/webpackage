@@ -22,6 +22,7 @@ TAG's Web Packaging Draft](https://w3ctag.github.io/packaging-on-the-web/)~~.
   - [Third-party security review](#third-party-security-review)
 - [Loading sketch](#loading-sketch)
   - [Content-Disposition](#content-disposition)
+  - [Service Workers](#service-workers)
 - [FAQ](#faq)
   - [Why signing but not encryption? HTTPS provides both...](#why-signing-but-not-encryption-https-provides-both)
   - [What if a publisher accidentally signs a non-public resource?](#what-if-a-publisher-accidentally-signs-a-non-public-resource)
@@ -255,6 +256,15 @@ same-origin logical URLs.
 `Content-Disposition: attachment` has its usual effect: the resource is saved to
 a file. The source of the download, for platforms that can record such a thing,
 is the signed request URL, not the physical URL.
+
+### Service Workers
+
+Prefetch of an `application/signed-exchange` resource uses the physical URL's
+Service Worker (SW) and doesn't inform the logical URL's SW that it was
+prefetched. When the resource is preloaded or actually used, that fires a
+`fetch` event in the logical URL's SW, with a flag (TBD) providing the content
+offered by the signed exchange. If the logical SW forwards the request to the
+network, that will return immediately with the signed content.
 
 ## FAQ
 

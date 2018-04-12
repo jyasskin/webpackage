@@ -928,9 +928,8 @@ able to make even one unauthorized signature.
 Certificates with this extension MUST be revoked if an unauthorized entity is
 able to make even one unauthorized signature.
 
-Conforming CAs MUST NOT mark this extension as critical.
-
-Clients MUST NOT accept certificates with this extension in TLS connections
+Conforming CAs MUST NOT mark this extension as critical, and the presence of
+this extension MUST NOT cause clients to reject a certificate in TLS connections
 (Section 4.4.2.2 of {{!I-D.ietf-tls-tls13}}).
 
 RFC EDITOR PLEASE DELETE THE REST OF THE PARAGRAPHS IN THIS SECTION
@@ -1925,6 +1924,8 @@ RFC EDITOR PLEASE DELETE THIS SECTION.
 
 draft-05
 
+* Allow certificates with the CanSignHttpExchanges extension to be used as TLS
+  certificates.
 * Define absolute URLs, and limit the schemes each instance can use.
 * Fill in TBD size limits.
 * Update to mice-03 including the Digest header.

@@ -172,6 +172,26 @@ available for the request it's handling, it has two options:
 
 </section>
 
+## Package Registrations ## {#package-registrations}
+
+Upon <a>navigating</a> to a resource with the `application/package`
+`content-type`, the UA streams it into a newly-created <a>package
+registration</a>. When enough of the package has been received that the UA knows
+whether the registration is [=package registration/trusted=] and what
+the [=package registration/manifest's=] [=start url=] is, the UA redirects to
+the package's start url.
+
+Unlike most redirections, the UA can profitably keep the stream going for the
+package itself, letting it keep filling the [=package registration's=] content.
+The UA can also cancel the stream at any point, and issue Range requests when
+individual resources are needed.
+
+During [=HTTP fetch=], after checking for Service Workers, the request is
+matched against the [=package registration/content=] of all [=package
+registration/trusted=] package registrations and against the content of the HTTP
+cache. If at least one matches, the most recent (TODO: elaborate) HTTP response
+is returned instead of going to the network.
+
 # Fetch monkeypatches # {#monkeypatches}
 
 When fetching a signed exchange, the UA needs to look for a trusted and valid
@@ -370,6 +390,30 @@ An exchange signature is a [=struct=] with the following items:
 :: The POSIX time at which the signature stops being valid.
 
 </dl>
+
+<h3 dfn-type=dfn export>Package registration</h3>
+
+A package registration consists of the following components:
+
+<ul dfn-for="package registration">
+
+* A <dfn export>package URL</dfn>, the URL from which the package was
+    downloaded. This can be used to issue Range requests [[RFC7233]] for
+    components of the package.
+
+* A <dfn export>trusted</dfn> boolean, saying whether the resources in the
+    package were signed by certificates trusted for their respective origins.
+
+* A <dfn export>manifest</dfn>, defined by [[appmanifest]].
+
+* A <dfn export>content</dfn> map from HTTP requests to possibly-pending HTTP
+    responses. The pending responses are filled in as the package streams in.
+    Note that the requests in the package's content are unlikely to exactly
+    match the requests the UA would make as part of [=/fetching=] URLs, so this
+    spec's monkeypatch to [=HTTP fetch=] will have a more sophisticated
+    algorithm for searching the content keys for matching resources.
+
+</ul>
 
 # Algorithms # {#algorithms}
 

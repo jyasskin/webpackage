@@ -189,6 +189,79 @@ Associated requirements:
 * {{response-headers}}{:format="title"}: The meaning of a resource is heavily
   influenced by its HTTP response headers.
 
+### Privacy-preserving prefetch {#private-prefetch}
+
+Lots of websites link to other websites. Many of these source sites would like
+the targets of these links to load quickly. The source could use `<link
+rel="prefetch">` to prefetch the target of a link, but if the user doesn't
+actually click that link, that leaks the fact that the user saw a page that
+linked to the target. This can be true even if the prefetch is made without
+browser credentials because of mechanisms like TLS session IDs.
+
+Because clients have limited data budgets to prefetch link targets, this use
+case is probably limited to sites that can accurately predict which link their
+users are most likely to click. For example, search engines can predict that
+their users will click one of the first couple results, and news aggreggation
+sites like Reddit or Slashdot can hope that users will read the article if
+they've navigated to its discussion.
+
+Two search engines have built systems to do this with today's technology:
+Google's [AMP](https://www.ampproject.org/) and Baidu's
+[MIP](https://www.mipengine.org/) formats and caches allow them to prefetch
+search results while preserving privacy, at the cost of showing the wrong URLs
+for the results once the user has clicked. A good solution to this problem would
+show the right URLs but still avoid a request to the publishing origin until
+after the user clicks.
+
+Associated requirements:
+
+* {{signing}}{:format="title"}: To prove the content came from the original
+  origin.
+* {{streamed-loading}}{:format="title"}: If the user clicks before the target
+  page is fully transferred, the browser should be able to start loading early
+  parts before the source site finishes sending the whole page.
+* {{transfer-compression}}{:format="title"}
+* {{subsetting}}{:format="title"}: If a prefetched page includes subresources,
+  its publisher might want to provide and sign both WebP and PNG versions of an
+  image, but the source site should be able to transfer only best one for each
+  client.
+
+### Subresource bundling {#bundling}
+
+Text based subresources often benefit from improved compression ratios when
+bundled together.
+
+At the same time, the current practice of JS and CSS bundling, by compiling
+everything into a single JS file, also has negative side-effects:
+
+1. Dependent execution - in order to start executing *any* of the bundled
+   resources, it is required to download, parse and execute *all* of them.
+1. Loss of caching granularity - Modification of *any* of the resources results
+   in caching invalidation of *all* of them.
+1. Loss of module semantics - ES6 modules must be delivered as independent
+   resources. Therefore, current bundling methods, which deliver them with other
+   resources under a common URL, require transpilation to ES5 and result in loss
+   of ES6 module semantics.
+
+An on-the-fly readable packaging format, that will enable resources to maintain
+their own URLs while being physically delivered with other resources, can
+resolve the above downsides while keeping the upsides of improved compression
+ratios.
+
+To improve cache granularity, the client needs to tell the server which versions
+of which resources are already cached, which it could do with a Service Worker
+or perhaps with {{?I-D.ietf-httpbis-cache-digest}}.
+
+Associated requirements:
+
+* {{urls}}{:format="title"}
+* {{streamed-loading}}{:format="title"}: To solve downside 1.
+* {{transfer-compression}}{:format="title"}: To keep the upside.
+* {{response-headers}}{:format="title"}: At least the Content-Type is needed to
+  load JS and CSS.
+* {{unsigned-content}}{:format="title"}: Signing same-origin content wastes
+  space.
+
 ## Nice-to-have {#nice-to-have-use-cases}
 
 ### Packaged Web Publications {#uc-web-pub}
@@ -309,43 +382,6 @@ Associated requirements:
 
 * {{external-dependencies}}{:format="title"}
 
-### Privacy-preserving prefetch {#private-prefetch}
-
-Lots of websites link to other websites. Many of these source sites would like
-the targets of these links to load quickly. The source could use `<link
-rel="prefetch">` to prefetch the target of a link, but if the user doesn't
-actually click that link, that leaks the fact that the user saw a page that
-linked to the target. This can be true even if the prefetch is made without
-browser credentials because of mechanisms like TLS session IDs.
-
-Because clients have limited data budgets to prefetch link targets, this use
-case is probably limited to sites that can accurately predict which link their
-users are most likely to click. For example, search engines can predict that
-their users will click one of the first couple results, and news aggreggation
-sites like Reddit or Slashdot can hope that users will read the article if
-they've navigated to its discussion.
-
-Two search engines have built systems to do this with today's technology:
-Google's [AMP](https://www.ampproject.org/) and Baidu's
-[MIP](https://www.mipengine.org/) formats and caches allow them to prefetch
-search results while preserving privacy, at the cost of showing the wrong URLs
-for the results once the user has clicked. A good solution to this problem would
-show the right URLs but still avoid a request to the publishing origin until
-after the user clicks.
-
-Associated requirements:
-
-* {{signing}}{:format="title"}: To prove the content came from the original
-  origin.
-* {{streamed-loading}}{:format="title"}: If the user clicks before the target
-  page is fully transferred, the browser should be able to start loading early
-  parts before the source site finishes sending the whole page.
-* {{transfer-compression}}{:format="title"}
-* {{subsetting}}{:format="title"}: If a prefetched page includes subresources,
-  its publisher might want to provide and sign both WebP and PNG versions of an
-  image, but the source site should be able to transfer only best one for each
-  client.
-
 ### Cross-CDN Serving {#cross-cdn-serving}
 
 When a web page has subresources from a different origin, retrieval of those
@@ -394,42 +430,6 @@ data, VC may break the package.
 Associated requirements:
 
 * {{binary}}{:format="title"}
-
-### Subresource bundling {#bundling}
-
-Text based subresources often benefit from improved compression ratios when
-bundled together.
-
-At the same time, the current practice of JS and CSS bundling, by compiling
-everything into a single JS file, also has negative side-effects:
-
-1. Dependent execution - in order to start executing *any* of the bundled
-   resources, it is required to download, parse and execute *all* of them.
-1. Loss of caching granularity - Modification of *any* of the resources results
-   in caching invalidation of *all* of them.
-1. Loss of module semantics - ES6 modules must be delivered as independent
-   resources. Therefore, current bundling methods, which deliver them with other
-   resources under a common URL, require transpilation to ES5 and result in loss
-   of ES6 module semantics.
-
-An on-the-fly readable packaging format, that will enable resources to maintain
-their own URLs while being physically delivered with other resources, can
-resolve the above downsides while keeping the upsides of improved compression
-ratios.
-
-To improve cache granularity, the client needs to tell the server which versions
-of which resources are already cached, which it could do with a Service Worker
-or perhaps with {{?I-D.ietf-httpbis-cache-digest}}.
-
-Associated requirements:
-
-* {{urls}}{:format="title"}
-* {{streamed-loading}}{:format="title"}: To solve downside 1.
-* {{transfer-compression}}{:format="title"}: To keep the upside.
-* {{response-headers}}{:format="title"}: At least the Content-Type is needed to
-  load JS and CSS.
-* {{unsigned-content}}{:format="title"}: Signing same-origin content wastes
-  space.
 
 ### Archival {#archival}
 

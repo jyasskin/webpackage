@@ -133,6 +133,7 @@ spec: draft-yasskin-http-origin-signed-responses; urlPrefix: https://wicg.github
     type: dfn
         text: off-path attackers; url: seccons-off-path
         text: uncached response header; url: uncached-headers
+        text: validity data CDDL; url: updating-validity
 spec: draft-yasskin-httpbis-origin-signed-exchanges-impl-02; urlPrefix: https://tools.ietf.org/html/draft-yasskin-httpbis-origin-signed-exchanges-impl-02#
     type: dfn
         text: canonically-encoded CBOR; url: section-3.4
@@ -163,8 +164,8 @@ The Signed Exchanges specification
 more signatures for an HTTP exchange and to check whether any of those
 signatures is trusted as authoritative for a particular origin. This
 specification describes how web browsers load those exchanges. It is expressed
-as several monkeypatches to the [[FETCH]] specification which call algorithms
-defined here.
+as several monkeypatches to the [[FETCH]] and [[HTML]] specifications which call
+algorithms defined here.
 
 ## Overview ## {#overview}
 
@@ -250,6 +251,21 @@ A [=response=] |response|'s <dfn for="response">date</dfn> is the result of:
 1. Return the point in time represented by |date|, as interpreted for the [=Date
     header field=].
 
+## A response's signed exchange record ## {#mp-response-signed-exchange-record}
+
+A [=response=] has an associated <dfn for="response">signed exchange
+record</dfn>, which is null or a [=struct=] with the following items:
+
+<ul dfn-for="signed exchange record">
+
+* <dfn>signature</dfn>: The [=exchange signature=] of the signed exchange that
+    populated this [=response=].
+
+* <dfn>message</dfn>: The [=signed message=] computed from the signed exchange
+    that populated this [=response=].
+
+</ul>
+
 <h3 algorithm id="mp-http-fetch">Monkeypatch HTTP fetch</h3>
 
 In [=HTTP fetch=], before
@@ -322,6 +338,41 @@ add the following steps:
 Note: Applying the signed exchange's response here has the effect of letting a
 newer HTTP cache entry override a signed exchange's content, and of not storing
 the signed exchange's response in the HTTP cache.
+
+# HTML monkeypatches # {#html-monkeypatches}
+
+A signed exchange may be out of date by the time it's served to a client, and
+its publisher may want to repudiate the old information. To do this, the
+publisher can update the signed exchange's [=exchange signature/validityUrl=],
+and if the UA runs the algorithm below, it will notice and reload the repudated
+resource. However, UAs may choose not to run this algorithm in order to improve
+user privacy, so if the ability to repudiate content is especially important,
+publishers should also use Javascript to do so.
+
+<h3 algorithm id="mp-initialise-the-document-object">Monkeypatch initializing a new Document object</h3>
+
+In [=Initializing a new Document object=], after
+
+> 9. If response has a `Refresh` header, then: ...
+
+append the following step:
+
+10. If |response| has a [=response/signed exchange record=], the UA MAY:
+    1. Let |document| be the new {{Document}}.
+    1. Let |browsingContext| be |document|'s [=Document/browsing context=].
+    1. Run the following steps [=in parallel=]:
+        1. Let |result| be the result of [=checking the validity-url=] of
+            |response|.
+        1. If |result| is "invalid", [=queue a task=] on |document|'s [=DOM
+            manipulation task source=] to run the following steps:
+            1. If |browsingContext|'s [=active document=] is |document|,
+                [=navigate=] |browsingContext| to |document|'s [=Document/URL=]
+                as a <a spec="html">reload-triggered navigation</a>, with
+                |browsingContext| as the [=source browsing context=].
+
+            1. Otherwise, [=discard a document|discard=] |document| to make sure
+                it's not re-used when navigating through the <a
+                spec="html">session history</a>.
 
 # Structures # {#structs}
 
@@ -767,6 +818,29 @@ cross-origin trust">establishes cross-origin trust</dfn> in an [=exchange=]
     chain/does not have a trusted leaf=] for |requestUrl|'s [=url/origin=],
     return "untrusted".
 1. Return "trusted".
+
+<h3 algorithm id="check-validity-url">Checking the validity-url</h3>
+
+The result of <dfn>checking the validity-url</dfn> of a [=response=] |response|
+is "valid", "unknown", or "invalid" as returned by the following steps:
+
+1. Let |validityBytes| be the result of [=fetching=] the |response|'s
+    [=response/signed exchange record=]'s [=signed exchange record/signature=]'s
+    [=exchange signature/validityUrl=].
+1. If this fails, return "unknown".
+1. Let |validity| be the result of parsing |validityBytes| according to the
+    [=validity data CDDL=]. If |validityBytes| doesn't match this CDDL or isn't
+    [=canonically-encoded CBOR=], return "unknown".
+1. Let |signatures| be |validity|'s `signatures` [=list=], or an empty [=list=]
+    if `signatures` is absent.
+1. [=list/For each=] |signature| in |signatures|:
+    1. Let |parsedSignature| be the result of [=parsing the Signature header field=]
+        |signature| in the context of |client|.
+    1. If |parsedSignature| is a failure, [=iteration/continue=].
+    1. If |parsedSignature| [=exchange signature/is not valid=] for (TODO: type
+        error) |response|'s [=response/signed exchange record=]'s [=signed
+        exchange record/message=], [=iteration/continue=].
+1. Return "invalid".
 
 <h3 algorithm id="trusting-certificate">Establishing trust in a certificate</h3>
 

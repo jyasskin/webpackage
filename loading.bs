@@ -93,8 +93,6 @@ Assume Explicit For: yes
 }
 </pre>
 <pre class='anchors'>
-spec: app-manifest; urlPrefix: https://w3c.github.io/manifest/#
-    text: start URL; type: dfn; url: dfn-start-
 spec: RFC3230; urlPrefix: https://tools.ietf.org/html/rfc3230#
     type: http-header
         text: Digest; url: section-4.3.2
@@ -111,6 +109,10 @@ spec: RFC6960; urlPrefix: https://tools.ietf.org/html/rfc6960#
     text: OCSPResponse; type: dfn; url: section-4.2.1
 spec: RFC6962; urlPrefix: https://tools.ietf.org/html/rfc6962#
     text: SignedCertificateTimestampList; type: dfn; url: section-3.3
+spec: RFC7230; urlPrefix: https://tools.ietf.org/html/rfc7230#
+    type: dfn
+        text: field-name; url: section-3.2
+        text: field-value; url: section-3.2
 spec: RFC7231; urlPrefix: https://tools.ietf.org/html/rfc7231#
     type: dfn
         text: HTTP media type; url: section-3.1.1.1
@@ -218,13 +220,17 @@ contained resource in the HTTP cache, so redirects get a new field to store it.
 A [=request=] has an associated <dfn for="request">stashed exchange</dfn>, which
 is null or an [=exchange=].
 
+A [=request=] has an associated <dfn for="request">stashed bundle</dfn>, which
+is null or a [=bundle=].
+
 <h3 algorithm id="mp-request-clone">Request clone</h3>
 
 Rewrite [=request/clone|clone a request=] to run these steps:
 
 <ol>
- <li>Let |newRequest| be a copy of |request|, except for its [=request/body=]
-  <ins>and [=request/stashed exchange=]</ins>.
+ <li>Let |newRequest| be a copy of |request|, except for its
+  [=request/body=]<ins>, [=request/stashed exchange=], and
+  [=request/stashed bundle=]</ins>.
 
  <li>If |request|'s [=request/body=] is non-null, set |newRequest|'s
   [=request/body=] to the result of [=body/cloning=] |request|'s
@@ -332,6 +338,46 @@ newer HTTP cache entry override a signed exchange's content, and of not storing
 the signed exchange's response in the HTTP cache.
 
 # Structures # {#structs}
+
+<h3 dfn-type=dfn export>Bundle</h3>
+
+A bundle is a [=struct=] with the following items:
+
+<ul dfn-for="bundle">
+
+* <dfn export>manifest</dfn>, a {{WebAppManifest}}.
+* <dfn export>exchanges</dfn>, a [=map=] from [=URLs=] to [=Variant-negotiated
+    response maps=]
+
+</ul>
+
+<h3 dfn-type=dfn export>Variant-negotiated response map</h3>
+
+A Variant-negotiated response map is a [=map=] from [=lists=] of
+[=field-name=]/[=field-value=] [=pairs=] to {{Promise}}s containing [=responses=].
+
+<div class="note">
+
+  The bundle's index maps request URLs to arrays holding a <a
+  http-header>Variants</a> header [=field-value=] followed by offsets into the
+  response data. For example, it might map
+  `https://publisher.example/index.html` to «`Accept-Encoding;gzip;br,
+  Accept-Language;en;fr`, 100, 700, 300, 500».
+
+  This example would lead to an initial Variant-negotiated response map of
+
+  1. «`Accept-Encoding`/`gzip`, `Accept-Language`/`en`» → |promise1|
+  2. «`Accept-Encoding`/`gzip`, `Accept-Language`/`fr`» → |promise2|
+  3. «`Accept-Encoding`/`br`, `Accept-Language`/`en`» → |promise3|
+  4. «`Accept-Encoding`/`br`, `Accept-Language`/`fr`» → |promise4|
+
+  With all promises initially pending. Once enough of the bundle has been
+  received to parse a response header starting from offset 100, |promise1| is
+  fulfilled with a [=response=] whose [=response/body=] continues to stream in
+  as more of the bundle is received. This is followed by |promise3|, |promise4|,
+  and |promise2|.
+
+</div>
 
 <h3 dfn-type=dfn export>Exchange</h3>
 
@@ -450,7 +496,7 @@ An exchange signature is a [=struct=] with the following items:
 
 </dl>
 
-# Algorithms # {#algorithms}
+<h2 id="sxg-algorithms" oldids="algorithms">Signed Exchange Algorithms</h2>
 
 <h3 algorithm id="identifying-sxg">Identifying signed exchanges</h3>
 
@@ -1170,6 +1216,11 @@ result, the UA MUST:
     }
     </pre>
     </div>
+
+
+# Bundle Algorithms # {#bundle-algorithms}
+
+# Common Algorithms # {#common-algorithms}
 
 ## Stream algorithms ## {#stream-algs}
 

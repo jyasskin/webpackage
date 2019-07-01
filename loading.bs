@@ -1,5 +1,5 @@
 <pre class='metadata'>
-Title: Loading Signed Exchanges
+Title: Loading Web Packages
 Shortname: web-package-loading
 Level: none
 Status: ED
@@ -7,7 +7,7 @@ Group: WICG
 Repository: WICG/webpackage
 URL: https://wicg.github.io/webpackage/loading.html
 Editor: Jeffrey Yasskin, Google Inc. https://google.com/, jyasskin@chromium.org, w3cid 72192
-Abstract: How UAs load signed exchanges.
+Abstract: How UAs load web packages: signed exchanges and bundles.
 
 Complain About: accidental-2119 yes, missing-example-ids yes
 Markup Shorthands: markdown yes, css no
@@ -133,6 +133,8 @@ spec: draft-thomson-http-mice; urlPrefix: https://tools.ietf.org/html/draft-thom
 spec: draft-yasskin-wpack-bundled-exchanges; urlPrefix: https://wicg.github.io/webpackage/draft-yasskin-wpack-bundled-exchanges.html#
     type: dfn
         text: parsing a CBOR item; url: parse-known-length
+        for: bundle
+            text: index section; url: index-section
 spec: draft-yasskin-http-origin-signed-responses; urlPrefix: https://wicg.github.io/webpackage/draft-yasskin-http-origin-signed-responses.html#
     type: dfn
         text: off-path attackers; url: seccons-off-path
@@ -306,6 +308,45 @@ add the following steps:
     version of `` `1` ``, but this specification tracks what's actually
     implemented in browsers, which still uses draft versions.
 
+6. If the [=bundle version=] of |actualResponse| is:
+
+    <dl class="switch">
+    : undefined
+    :: Do nothing.
+
+    : `"b1"`
+    ::
+        1. Let |report| be the result of [=create a new bundle report=]
+            with |request| and |actualResponse|.
+        1. Let |parsedBundle| be the result of [=parsing a bundle=] from
+            |actualResponse| in the context of |request|'s [=request/client=],
+            reporting to |report|.
+        1. If |parsedBundle| is not a [=bundle=], run
+            [=queue a bundle report=] |report| with
+            |parsedBundle| as the result, and return a [=network error=].
+        1. [=In parallel=], [=wait and queue a bundle report for=] |parsedBundle| and
+            |report|.
+        1. Set |actualResponse|'s [=status=] to `303`.
+        1. [=header list/Set=] |actualResponse|'s `` `Location` `` header to
+            the [=ASCII encoding=] of the [=URL serializer|serialization=]
+            of |parsedBundle|'s [=bundle/manifest=]'s {{webappmanifest/start_url}}.
+        1. Set |request|'s [=request/stashed exchange=] to |parsedExchange|.
+
+    : Anything else
+    ::
+        1. Let |fallbackUrlBytes| be the result of [=extracting the fallback
+            URL=] from |actualResponse|.
+        1. If |fallbackUrlBytes| is a failure, return a [=network error=].
+        1. Set |actualResponse|'s [=status=] to `303`.
+        1. [=header list/Set=] |actualResponse|'s `` `Location` `` header to
+            |fallbackUrlBytes|.
+
+    </dl>
+
+    Note: The final [[draft-yasskin-wpack-bundled-exchanges]] will use a version
+    of `` `1` ``, but this specification tracks what's actually implemented in
+    browsers, which still uses draft versions.
+
 <h3 algorithm id="mp-http-network-or-cache-fetch">Monkeypatch HTTP-network-or-cache fetch</h3>
 
 In <a spec="fetch">HTTP-network-or-cache fetch</a>, after
@@ -337,7 +378,7 @@ Note: Applying the signed exchange's response here has the effect of letting a
 newer HTTP cache entry override a signed exchange's content, and of not storing
 the signed exchange's response in the HTTP cache.
 
-# Structures # {#structs}
+<h2 id="data-types" oldids="structs">Data Types</h2>
 
 <h3 dfn-type=dfn export>Bundle</h3>
 
@@ -346,30 +387,38 @@ A bundle is a [=struct=] with the following items:
 <ul dfn-for="bundle">
 
 * <dfn export>manifest</dfn>, a {{WebAppManifest}}.
-* <dfn export>exchanges</dfn>, a [=map=] from [=URLs=] to [=Variant-negotiated
-    response maps=]
+* <dfn export>exchanges</dfn>, a [=map=] whose keys are [=URLs=] and whose
+    values are either [=promised responses=] or [=Variant-negotiated response
+    maps=].
 
 </ul>
 
 <h3 dfn-type=dfn export>Variant-negotiated response map</h3>
 
-A Variant-negotiated response map is a [=map=] from [=lists=] of
-[=field-name=]/[=field-value=] [=pairs=] to {{Promise}}s containing [=responses=].
+A Variant-negotiated response map is [=struct=] with the following items:
+
+<ul dfn-for="Variant-negotiated response map">
+
+* <dfn export>variants</dfn>, a <a http-header>Variants</a> value
+* <dfn export>responses</dfn>, a [=map=] from <a http-header>Variant-Key</a>
+    values to [=promised responses=].
+
+</ul>
 
 <div class="note">
 
-  The bundle's index maps request URLs to arrays holding a <a
+  The bundle's [=bundle/index section=] maps request URLs to arrays holding a <a
   http-header>Variants</a> header [=field-value=] followed by offsets into the
   response data. For example, it might map
-  `https://publisher.example/index.html` to «`Accept-Encoding;gzip;br,
-  Accept-Language;en;fr`, 100, 700, 300, 500».
+  `https://publisher.example/index.html` to «`` `Accept-Encoding;gzip;br,
+  Accept-Language;en;fr` ``, 100, 700, 300, 500».
 
-  This example would lead to an initial Variant-negotiated response map of
+  This example would lead to a Variant-negotiated response map of
 
-  1. «`Accept-Encoding`/`gzip`, `Accept-Language`/`en`» → |promise1|
-  2. «`Accept-Encoding`/`gzip`, `Accept-Language`/`fr`» → |promise2|
-  3. «`Accept-Encoding`/`br`, `Accept-Language`/`en`» → |promise3|
-  4. «`Accept-Encoding`/`br`, `Accept-Language`/`fr`» → |promise4|
+  1. «`` `gzip;en` ``» → |promise1|
+  2. «`` `gzip;fr` ``» → |promise2|
+  3. «`` `br;en` ``» → |promise3|
+  4. «`` `br;fr` ``» → |promise4|
 
   With all promises initially pending. Once enough of the bundle has been
   received to parse a response header starting from offset 100, |promise1| is
@@ -378,6 +427,10 @@ A Variant-negotiated response map is a [=map=] from [=lists=] of
   and |promise2|.
 
 </div>
+
+<h3 dfn-type=dfn export>Promised response</h3>
+
+A promised response is a {{Promise}} containing a [=response=].
 
 <h3 dfn-type=dfn export>Exchange</h3>
 
@@ -467,6 +520,38 @@ A signed exchange report is a [=struct=] with the following items:
 
 </dl>
 
+<h3 dfn-type=dfn export>Bundle report</h3>
+
+A bundle report is a [=struct=] with the following items:
+
+<dl dfn-for="bundle report">
+: <dfn>result</dfn>
+:: The result string of loading a bundle. This must be unset or one of
+    "<dfn>`ok`</dfn>", "<dfn>`mi_error`</dfn>",
+    "<dfn>`non_secure_distributor`</dfn>", "<dfn>`parse_error`</dfn>",
+    "<dfn>`invalid_integrity_header`</dfn>",
+    "<dfn>`signature_verification_error`</dfn>",
+    "<dfn>`cert_verification_error`</dfn>", "<dfn>`cert_fetch_error`</dfn>",
+    "<dfn>`cert_parse_error`</dfn>",
+: <dfn>outer request</dfn>
+:: The [=request=] which the user agent sent to the server to load the bundle.
+: <dfn>outer response</dfn>
+:: The [=response=] which the user agent received from the server.
+: <dfn>inner URL</dfn>
+:: The logical [=URL=] of the bundle, if available. Otherwise, an empty
+    string.
+: <dfn>cert URL list</dfn>
+:: The list of [=URLs=] in "`cert-url`" parameters for the bundle's
+    signatures, if available. Otherwise, an empty list.
+: <dfn>server IP</dfn>
+:: The IP address of the server from which the user agent received the signed
+    exchange, if available. Otherwise, an empty string.
+: <dfn>cert server IP list</dfn>
+:: The list of IP addresses of the servers from which the user agent received
+    the certificates listed in [=bundle report/cert URL list=].
+
+</dl>
+
 <h3 dfn-type=dfn export>Exchange Signature</h3>
 
 An exchange signature is a [=struct=] with the following items:
@@ -537,7 +622,7 @@ the result of the following steps:
     from |stream|. If returns a failure, return that failure.
 1. Return |fallbackUrlBytes|.
 
-<h3 algorithm id="parsing">Parsing signed exchanges</h3>
+<h3 algorithm id="parsing-sxg" oldids="parsing">Parsing signed exchanges</h3>
 
 This section defines how to load the formats defined in
 [[draft-yasskin-httpbis-origin-signed-exchanges-impl-02]] and
@@ -1219,6 +1304,236 @@ result, the UA MUST:
 
 
 # Bundle Algorithms # {#bundle-algorithms}
+
+<h3 algorithm id="identifying-bundles">Identifying bundles</h3>
+
+The <dfn>bundle version</dfn> of a [=response=] |response| is the
+result of the following steps:
+
+1. If <a spec="fetch">determine nosniff</a> on |response|'s [=response/header
+    list=] returns false, return undefined.
+
+    Note: This requires servers to include the `X-Content-Type-Options: nosniff`
+    header when they serve bundles, which prevents some clients that don't
+    understand bundles from interpreting one as another content type.
+
+1. Let |mimeType| be the result of [=header list/extracting a MIME type=] from
+    |response|'s [=response/header list=].
+1. If |mimeType| is a failure, return undefined.
+1. If |mimeType|'s [=MIME type/essence=] is not `"application/webbundle"`,
+    return undefined.
+1. Let |params| be |mimeType|'s [=MIME type/parameters=]
+1. If |params|["v"] exists, return it. Otherwise, return undefined.
+
+<h3 algorithm id="parsing-bundle">Parsing bundles</h3>
+
+This section defines how to load the format defined in
+[[draft-yasskin-wpack-bundled-exchanges]].
+
+<dfn>Parsing a bundle</dfn> from a [=response=] |response| in the context of an
+[=environment settings object=] |client|, reporting to a [=bundle report=]
+|report|, returns a [=bundle=] or a string which indicates a [=bundle
+report/result=] as described by the following steps
+
+1. Assert: This algorithm is running [=in parallel=].
+1. Assert: The [=bundle version=] of |response| is `"b1"`.
+1. If |response|'s [=response/URL=]'s [=url/origin=] is not a [=potentially
+    trustworthy origin=], return
+    "[=bundle report/non_secure_distributor=]".
+
+    Note: This ensures that the privacy properties of retrieving a cross-origin
+    HTTPS resource via a bundle are no worse than retrieving it via TLS.
+
+    Issue: Should non-HTTPS origins be able to use unsigned same-origin bundles?
+
+1. Let |bodyStream| be |response|'s [=response/body=]'s [=body/stream=].
+1. If |bodyStream| is null, return "[=signed exchange report/parse_error=]".
+1. Let |stream| be a [=new read buffer=] for |bodyStream|.
+1. Let (|magic|, |requestUrlBytes|, |requestUrl|) be the result of [=parsing the
+    invariant prefix=] from |stream|. If returns a failure, return
+    "[=signed exchange report/parse_error=]".
+1. Set |report|'s [=signed exchange report/inner URL=] to |requestUrl|.
+1. If |magic| is not the following value, depending on |version|, return
+    "[=signed exchange report/parse_error=]":
+    <dl class="switch">
+    : `b2`
+    :: `` `sxg1-b2\0` ``
+    : `b3`
+    :: `` `sxg1-b3\0` ``
+
+    </dl>
+1. Assert: |requestUrlBytes| should match the result of [=extracting the
+    fallback URL=] from |response|.
+1. Let |encodedSigLength| be the result of [=read buffer/reading=] 3 bytes from
+    |stream|.
+1. Let |encodedHeaderLength| be the result of [=read buffer/reading=] 3 bytes
+    from |stream|.
+1. If |encodedSigLength| or |encodedHeaderLength| is a failure, return
+    "[=signed exchange report/parse_error=]".
+1. Let |sigLength| be the result of decoding |encodedSigLength| as a big-endian
+    integer.
+1. Let |headerLength| be the result of decoding |encodedHeaderLength| as a
+    big-endian integer.
+1. If |sigLength| > 16384 or |headerLength| > 524288, return
+    "[=signed exchange report/parse_error=]".
+1. Let |signature| be the result of [=read buffer/reading=] |sigLength| bytes
+    from |stream|.
+1. If |signature| is a failure, return "[=signed exchange report/parse_error=]".
+1. Let |parsedSignature| be the result of [=parsing the Signature header field=]
+    |signature| in the context of |client| reporting to with |report|.
+1. If |parsedSignature| is not an [=exchange signature=], return it.
+1. Let |headerBytes| be the result of [=read buffer/reading=] |headerLength|
+    bytes from |stream|.
+1. If |headerBytes| is a failure, return
+    "[=signed exchange report/parse_error=]".
+1. If |parsedSignature| [=exchange signature/is not valid=] for |headerBytes|
+    and |requestUrlBytes|, and signed exchange version |version|, return
+    "[=signed exchange report/signature_verification_error=]".
+1. Let |parsedExchange| be, if |version| is:
+    <dl class="switch">
+    : `b2`
+    :: the result of [=parsing b2 CBOR headers=] given |headerBytes| and
+        |requestUrl|.
+    : `b3`
+    :: the result of [=parsing b3 CBOR headers=] given |headerBytes| and
+        |requestUrl|.
+1. If |parsedSignature| [=exchange signature/does not establish cross-origin
+    trust=] for |parsedExchange|, return
+    "[=signed exchange report/cert_verification_error=]".
+1. Set |parsedExchange|'s [=exchange/response=]'s [=response/HTTPS state=] to
+    either "`deprecated`" or "`modern`".
+
+    Note: See <a spec="fetch">HTTP-network fetch</a> for details of this choice.
+1. If |parsedExchange|'s [=exchange/response=]'s [=response/status=] is a
+    [=redirect status=] or the [=signed exchange version=] of |parsedExchange|'s
+    [=exchange/response=] is not undefined, return
+    "[=signed exchange report/parse_error=]".
+
+    Note: This might simplify the UA's implementation, since it doesn't have to
+    handle nested signed exchanges.
+1. [=Read a body=] from |stream| into |parsedExchange|'s
+    [=exchange/response=] using |parsedSignature| to check its integrity. If
+    this returns an error string, return it.
+
+    Note: Typically this body’s stream is still being enqueued to after
+    returning.
+1. Return |parsedExchange|.
+
+<h3 algorithm id="create-new-bundle-report">Create a new bundle report</h3>
+To <dfn>create a new bundle report</dfn> with |request| and
+|actualResponse|, the UA MUST:
+
+1. Let |report| be a new [=bundle report=] struct.
+1. Set |report|'s [=bundle report/outer request=] to |request|.
+1. Set |report|'s [=bundle report/outer response=] to |actualResponse|.
+1. Set |report|'s [=bundle report/server IP=] to the IP address of the
+    server from which the user agent received the |actualResponse|, if
+    available.
+1. Return |report|.
+
+<h3 algorithm id="wait-and-queue-a-bundle-report">Wait and queue a bundle report</h3>
+To <dfn>wait and queue a bundle report for</dfn> |parsedBundle| and |report|, the UA
+MUST:
+
+1. Wait until |parsedBundle|'s [=response/body=]'s [=body/stream=] is
+    [=ReadableStream/closed=] or [=ReadableStream/errored=].
+1. If |parsedBundle|'s [=response/body=]'s [=body/stream=] is
+    [=ReadableStream/closed=], run [=queue a bundle report=] |report|
+    with "[=bundle report/ok=]" as the result and abort these steps.
+1. If |parsedBundle|'s [=response/body=]'s [=body/stream=] is
+    [=ReadableStream/errored=], run [=queue a bundle report=] |report|
+    with "[=bundle report/mi_error=]" as the result.
+
+<h3 algorithm id="queue-bundle-report">Queuing a bundle report</h3>
+
+To <dfn>queue a bundle report</dfn> |report| with |result| as the
+result, the UA MUST:
+
+1. Set |report|'s [=bundle report/result=] to |result|.
+
+1. Let |report body| and |policy| be the result of
+    [=generate a network error report=]</a> with |report|'s
+    [=bundle report/outer request=]. If the result is null, abort
+    these steps.
+
+1. If |report body|'s `"type"` is `"dns.address_changed"`, abort these steps.
+
+    Note: This means that the NEL report was downgraded because the IP addresses
+    of the server and the |policy| don't match. In this case, the UA has called
+    [=deliver a network report=] algorithm with the error report while handling
+    the response. So we don't need to send the same error report while
+    processing the response as a bundle.
+
+1. Add a new property `"sxg"` to |report body| with a new ECMAScript object with
+     the following properties:
+
+    * `outer_url`: The [=URL serializer|serialization=] of |report|'s
+          [=bundle report/outer request=]'s [=request/url=].
+    * `inner_url`: The [=URL serializer|serialization=] of |report|'s
+          [=bundle report/inner URL=].
+    * `cert_url`: The [=sequence type=] of the result of
+          [=URL serializer|serialization=] of each element of |report|'s
+          [=bundle report/cert URL list=].
+
+1. Set |report body|'s `"phase"` to `"sxg"`.
+
+1. If the |report|'s [=bundle report/result=] is
+    "[=bundle report/ok=]", set |report body|'s `"type"` to `"ok"`.
+    Otherwise, set |report body|'s `"type"` to the result of concatenating a
+    string `"sxg."` and the |report|'s [=bundle report/result=].
+
+1. If |report body|'s `"sxg"`'s `"cert_url"`'s [=url/scheme=] is not `"data"`
+    and |report|'s [=bundle report/result=] is
+    "[=bundle report/signature_verification_error=]" or
+    "[=bundle report/cert_verification_error=]" or
+    "[=bundle report/cert_fetch_error=]" or
+    "[=bundle report/cert_parse_error=]":
+
+    1. If |report|'s [=bundle report/outer request=]'s
+        [=request/url=]'s [=url/origin=] is different from any [=url/origin=] of
+        the URLs in |report|'s [=bundle report/cert URL list=], or
+        |report|'s [=bundle report/server IP=] is different from
+        any of the IP address in |report|'s
+        [=bundle report/cert server IP list=]:
+
+        1. Set |report body|'s `"type"` to `"sxg.failed"`.
+        1. Set |report body|'s `"elapsed_time"` to 0.
+
+    Note: This step "downgrades" a bundle report if the certificate
+    was served from the different server from the server of `"outer_url"`. This
+    is intended to avoid leaking the information about the certificate server.
+1. [=Deliver a network report=] with |report body| and |policy| and
+    |report|'s [=bundle report/outer request=].
+
+    <div class="example" id="example-bundle-network-error-log">
+    If a [=NEL policy=] was received from the distributor's origin,
+    `distributor.example`, this step  will send the following JSON data to
+    describe an invalid signature:
+    <pre highlight="json">
+    {
+      "type": "network-error",
+      "url": "https://publisher.example/article.html",
+      "age": 234,
+      "user_agent": "Mozilla/5.0 (X11; Linux x86_64; rv:60.0) ...",
+      "body": {
+        "referrer": "https://aggregator.example/article.html",
+        "sampling_fraction": 1,
+        "server_ip": "192.0.2.42",  // The IP address of distributor.example.
+        "protocol": "http/1.1",
+        "method": "GET",
+        "status_code": 200,
+        "elapsed_time": 1234,
+        "phase": "sxg",
+        "type": "sxg.signature_verification_error",
+        "sxg": {
+          "outer_url": "https://distributor.example/publisher.example/article.html.sxg",
+          "inner_url": "https://publisher.example/article.html",
+          "cert_url": ["https://distributor.example/publisher.example/cert"]
+        },
+      }
+    }
+    </pre>
+    </div>
 
 # Common Algorithms # {#common-algorithms}
 

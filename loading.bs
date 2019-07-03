@@ -132,6 +132,7 @@ spec: draft-thomson-http-mice; urlPrefix: https://tools.ietf.org/html/draft-thom
         text: integrity proof for the first record; url: section-2.2
 spec: draft-yasskin-wpack-bundled-exchanges; urlPrefix: https://wicg.github.io/webpackage/draft-yasskin-wpack-bundled-exchanges.html#
     type: dfn
+        text: loading a bundle's metadata; url: semantics-load-metadata
         text: parsing a CBOR item; url: parse-known-length
         for: bundle
             text: index section; url: index-section
@@ -578,6 +579,28 @@ An exchange signature is a [=struct=] with the following items:
 :: The POSIX time at which the signature starts being valid.
 : <dfn>expiration time</dfn>
 :: The POSIX time at which the signature stops being valid.
+
+</dl>
+
+<h3 dfn-type=dfn>Error</h3>
+
+An error is a [=struct=] with the following items:
+
+<dl dfn-for="error">
+
+: <dfn>name</dfn>
+
+:: A name for the error, suitable to be prefixed with "sxg." and used as a
+    [=network error's=] [=network error/type=]. One of:
+
+    * <dfn>"unsupported_version"</dfn>
+    * <dfn>"untrusted_cert"</dfn>
+    * ...
+
+: <dfn>fallback URL</dfn>
+
+:: Null or a [=URL=] that the UA should redirect to in order to recover from the
+    error. This is only set for [=error/name|error names=] of [=error/"unsupported_version"=] and [=error/"untrusted_cert"=].
 
 </dl>
 
@@ -1349,7 +1372,7 @@ report/result=] as described by the following steps
 1. Let |bodyStream| be |response|'s [=response/body=]'s [=body/stream=].
 1. If |bodyStream| is null, return "[=signed exchange report/parse_error=]".
 1. Let |stream| be a [=new read buffer=] for |bodyStream|.
-1. Let (|magic|, |requestUrlBytes|, |requestUrl|) be the result of [=parsing the
+1. Let |bundleMetadata| be the result of [=loading a bundle's metadata=] from |stream|. If |bundleMetadata| is a "version error" with a |fallbackUrl|,  (|magic|, |requestUrlBytes|, |requestUrl|) be the result of [=parsing the
     invariant prefix=] from |stream|. If returns a failure, return
     "[=signed exchange report/parse_error=]".
 1. Set |report|'s [=signed exchange report/inner URL=] to |requestUrl|.

@@ -8,6 +8,7 @@ python:
 addons:
   apt:
     packages:
+     - plantuml
      - python-pip
      - xsltproc
 

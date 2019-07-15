@@ -14,3 +14,11 @@ endif
 
 %.html: %.bs
 	bikeshed spec $<
+
+%.svg: %.puml
+	cat $< | plantuml -tsvg -pipe > $@
+%.png: %.puml
+	cat $< | plantuml -tpng -pipe > $@
+
+latest:: $(addsuffix .svg, $(basename $(wildcard diagrams/*)))
+latest:: $(addsuffix .png, $(basename $(wildcard diagrams/*)))

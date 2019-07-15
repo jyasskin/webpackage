@@ -1,0 +1,29 @@
+@startUML Privacy
+actor Alice
+participant Client
+participant Referrer
+participant "Click Tracker /\nDistributor" as Inter
+
+alt Redirect
+  Referrer -> Client: <a href="clicktracker.example/publisher">
+else Package
+  Publisher -> Inter: Package
+  Inter -> Referrer: Package URL
+  Referrer -> Client: <a href="distributor.example/package">
+end
+Client -> Alice: Rendered page
+Alice -> Client: Click link
+
+alt Redirect
+  Client -> Inter: clicktracker.example/publisher
+  Inter --> Client: 302 publisher.example/page.html
+  Client -> Publisher: publisher.example/page.html
+  Publisher --> Client: Page
+else Package
+  Client -> Inter: distributor.example/package
+  Inter --> Client: Package
+end
+
+Client -> Alice: Render
+
+@endUML

@@ -627,6 +627,27 @@ To implement {{semantics-load-metadata-from-end}}, taking a sequence of bytes
      `currentOffset + N <= bundleLength` and fail otherwise.
 1. Return the result of running {{load-metadata}} with `stream` as input.
 
+## Filtering the vouched-subsets {#signature-validity}
+
+The client MUST use the following algorithm to filter the vouched-subsets from
+the bundle's metadata before treating any resource as vouched-for. The algorithm takes two functions:
+
+authorityRecognized(index, authoritiesList)
+
+: Returns true if the client recognizes `authoritiesList[index]`. For example,
+  if `authoritiesList[index]` is an X.509 certificate, the client might
+  recognize it if the client can build a valid chain from that certificate to a
+  trusted root using other certificates in the `authoritiesList`.
+
+signatureValid(authority, signature, message)
+
+: Returns true if `signature` is a valid signature of `message` by `authority`.
+  For example, if `authority` is an X.509 certificate with an EC public key on
+  the secp256r1 curve, `signatureValid(authority, signature, message)` might
+  return "valid" iff the ecdsa_secp256r1_sha256 algorithm defined in Section
+  4.2.3 of {{TLS1.3}} reports that `signature` is a valid signature of `message`
+  by the public key of `authority`.
+
 ## Load a response from a bundle {#load-response}
 
 The result of {{load-metadata}}{:format="title"} maps each URL and Variant-Key

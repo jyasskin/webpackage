@@ -396,7 +396,7 @@ A bundle is a [=struct=] with the following items:
 
 <h3 dfn-type=dfn export>Variant-negotiated response map</h3>
 
-A Variant-negotiated response map is [=struct=] with the following items:
+A Variant-negotiated response map is a [=struct=] with the following items:
 
 <ul dfn-for="Variant-negotiated response map">
 
@@ -1368,6 +1368,7 @@ report/result=] as described by the following steps
     HTTPS resource via a bundle are no worse than retrieving it via TLS.
 
     Issue: Should non-HTTPS origins be able to use unsigned same-origin bundles?
+    Tentatively no.
 
 1. Let |bodyStream| be |response|'s [=response/body=]'s [=body/stream=].
 1. If |bodyStream| is null, return "[=signed exchange report/parse_error=]".

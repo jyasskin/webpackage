@@ -91,7 +91,7 @@ informative:
 --- abstract
 
 This document describes checkpoints of
-draft-yasskin-http-origin-signed-responses to synchronize implementation between
+draft-yasskin-wpack-signed-exchanges to synchronize implementation between
 clients, intermediates, and publishers.
 
 --- note_Note_to_Readers
@@ -108,7 +108,7 @@ in <https://github.com/WICG/webpackage>.
 # Introduction
 
 Each version of this document describes a checkpoint of
-{{?I-D.yasskin-http-origin-signed-responses}} that can be implemented in sync by
+{{?I-D.yasskin-wpack-signed-exchanges}} that can be implemented in sync by
 clients, intermediates, and publishers. It defines a technique to detect which
 version each party has implemented so that mismatches can be detected up-front.
 
@@ -451,7 +451,7 @@ to retrieve an updated OCSP from the original server.
    1. A context string: the ASCII encoding of "HTTP Exchange 1 b3".
 
       Note: As this is a snapshot of a draft of
-      {{?I-D.yasskin-http-origin-signed-responses}}, it uses a distinct context
+      {{?I-D.yasskin-wpack-signed-exchanges}}, it uses a distinct context
       string.
    1. A single 0 byte which serves as a separator.
    1. If `cert-sha256` is set, a byte holding the value 32 followed by the 32
@@ -687,7 +687,7 @@ they're listed here:
 
 ### Stateful header fields {#stateful-headers}
 
-As described in Section 6.1 of {{?I-D.yasskin-http-origin-signed-responses}}, a
+As described in Section 6.1 of {{?I-D.yasskin-wpack-signed-exchanges}}, a
 publisher can cause problems if they
 sign an exchange that includes private information. There's no way for a client
 to be sure an exchange does or does not include private information, but header
@@ -815,7 +815,7 @@ This content type consists of the concatenation of the following items:
    either stop parsing or redirect to the `fallbackUrl` in the next two entries.
 
    Note: As this is a snapshot of a draft of
-   {{?I-D.yasskin-http-origin-signed-responses}}, it uses a distinct file
+   {{?I-D.yasskin-wpack-signed-exchanges}}, it uses a distinct file
    signature.
 1. 2 bytes storing a big-endian integer `fallbackUrlLength`.
 1. `fallbackUrlLength` bytes holding a `fallbackUrl`, which MUST UTF-8 decode to
@@ -880,7 +880,7 @@ following map>sig1; sig=*...; integrity="digest/mi-sha256-03"; ...{
 # Security considerations
 
 All of the security considerations from Section 6 of
-{{!I-D.yasskin-http-origin-signed-responses}} apply.
+{{!I-D.yasskin-wpack-signed-exchanges}} apply.
 
 # Privacy considerations
 
@@ -909,7 +909,7 @@ HTTP without TLS.
 
 # IANA considerations
 
-This depends on the following IANA registrations in {{?I-D.yasskin-http-origin-signed-responses}}:
+This depends on the following IANA registrations in {{?I-D.yasskin-wpack-signed-exchanges}}:
 
 * The `Signature` header field
 * The application/cert-chain+cbor media type
@@ -932,13 +932,13 @@ Required parameters:
   to reply with a resource using a particular version from that list.
 
   Note: As this is a snapshot of a draft of
-  {{?I-D.yasskin-http-origin-signed-responses}}, it uses a distinct version
+  {{?I-D.yasskin-wpack-signed-exchanges}}, it uses a distinct version
   number.
 
 Magic number(s):  73 78 67 31 2D 62 33 00
 
 The other fields are the same as the registration in
-{{?I-D.yasskin-http-origin-signed-responses}}.
+{{?I-D.yasskin-wpack-signed-exchanges}}.
 
 --- back
 

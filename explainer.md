@@ -69,9 +69,9 @@ a full list of use cases and resulting requirements.
 ### Signed HTTP exchanges
 
 The [Signed HTTP exchanges
-draft](https://wicg.github.io/webpackage/#go.draft-yasskin-http-origin-signed-responses.html)
+draft](https://wicg.github.io/webpackage/#go.draft-yasskin-wpack-signed-exchanges.html)
 ([IETF
-draft](https://tools.ietf.org/html/draft-yasskin-http-origin-signed-responses))
+draft](https://tools.ietf.org/html/draft-yasskin-wpack-signed-exchanges))
 allows a publisher to sign their HTTP exchanges and intermediates to forward
 those exchanges without breaking the signatures.
 
@@ -188,13 +188,13 @@ each of these options has significant downsides:
 
 1. A publisher signs a page that they'd like a source website to be able to
    prefetch and serves it with an appropriate [`Signature`
-   header](https://wicg.github.io/webpackage/draft-yasskin-http-origin-signed-responses.html#signature-header).
+   header](https://wicg.github.io/webpackage/draft-yasskin-wpack-signed-exchanges.html#signature-header).
 1. When the source website decides to link to the target page, it fetches the
    page with the [`Accept-Signature` request
-   header](https://wicg.github.io/webpackage/draft-yasskin-http-origin-signed-responses.html#accept-signature)
+   header](https://wicg.github.io/webpackage/draft-yasskin-wpack-signed-exchanges.html#accept-signature)
    to get the response to include the `Signature` header, and serializes that
    exchange into the [`application/http-exchange+cbor`
-   format](https://wicg.github.io/webpackage/draft-yasskin-http-origin-signed-responses.html#application-http-exchange).
+   format](https://wicg.github.io/webpackage/draft-yasskin-wpack-signed-exchanges.html#application-http-exchange).
    For example, `https://source.example.com/` might copy
    `https://publisher.example.com/page.html` to
    `https://cache.source.example.com/publisher.example.com/page.html`
@@ -277,7 +277,7 @@ error to higher layers.
 
 The client parses the beginning of the `application/signed-exchange` resource to
 extract the [`Signature`
-header](https://wicg.github.io/webpackage/draft-yasskin-http-origin-signed-responses.html#signature-header).
+header](https://wicg.github.io/webpackage/draft-yasskin-wpack-signed-exchanges.html#signature-header).
 Each signature in the `Signature` header has a `cert-url` field that identifies
 a certificate chain to use to validate the signature, and each certificate chain
 is fetched and validated.
@@ -528,7 +528,7 @@ The `expires` timestamp in the `Signature` header limits the lifetime of the
 resource in the same way as the OCSP response limits the lifetime of a
 certificate. When the author needs to replace a vulnerable resource, the
 signature's
-[`validity-url`](https://wicg.github.io/webpackage/draft-yasskin-http-origin-signed-responses.html#updating-validity)
+[`validity-url`](https://wicg.github.io/webpackage/draft-yasskin-wpack-signed-exchanges.html#updating-validity)
 would omit an updated signature, and the client would need to re-download the
 resource from its original location.
 

@@ -1,12 +1,12 @@
 # go/signedexchange
-This directory contains a reference implementation of [Signed HTTP Exchanges](https://wicg.github.io/webpackage/draft-yasskin-http-origin-signed-responses.html) format generator.
+This directory contains a reference implementation of [Signed HTTP Exchanges](https://wicg.github.io/webpackage/draft-yasskin-wpack-signed-exchanges.html) format generator.
 
 ## Overview
 We currently provide two command-line tools: `gen-signedexchange` and `gen-certurl`.
 
 `gen-signedexchange` generates a signed exchange file. The `gen-signedexchange` command constructs an HTTP request and response pair from given command line flags, attach the cryptographic signature of the pair, and serializes the result to an output file.
 
-`gen-certurl` converts an X.509 certificate chain, an OCSP response, and an SCT (if one isn't already included in the certificate or OCSP response) to `application/cert-chain+cbor` format, which is defined in the [Section 3.3 of the Signed HTTP Exchanges spec](https://wicg.github.io/webpackage/draft-yasskin-http-origin-signed-responses.html#rfc.section.3.3).
+`gen-certurl` converts an X.509 certificate chain, an OCSP response, and an SCT (if one isn't already included in the certificate or OCSP response) to `application/cert-chain+cbor` format, which is defined in the [Section 3.3 of the Signed HTTP Exchanges spec](https://wicg.github.io/webpackage/draft-yasskin-wpack-signed-exchanges.html#rfc.section.3.3).
 
 You are also welcome to use the code as a Go lib (e.g. `import "github.com/WICG/webpackage/go/signedexchange"`), but please be aware that the API is not yet stable and is subject to change any time.
 
@@ -85,7 +85,7 @@ Here, we assume that you have an access to an HTTPS server capable of serving st
 
 In this section, you will create a signed exchange using a certificate issued by a publicly trusted CA.
 
-Your signed exchange needs to be signed with a certificate with the ["CanSignHttpExchanges" extension](https://wicg.github.io/webpackage/draft-yasskin-http-origin-signed-responses.html#cross-origin-cert-req).
+Your signed exchange needs to be signed with a certificate with the ["CanSignHttpExchanges" extension](https://wicg.github.io/webpackage/draft-yasskin-wpack-signed-exchanges.html#cross-origin-cert-req).
 
 For testing purposes, Chrome M73+ will accept the signed exchanges without the "CanSignHttpExchanges" extention with the following flag enabled:
 - chrome://flags/#allow-sxg-certs-without-extension

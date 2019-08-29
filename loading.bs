@@ -33,11 +33,11 @@ Assume Explicit For: yes
         "status": "ED",
         "publisher": "IETF"
     },
-    "draft-yasskin-http-origin-signed-responses": {
+    "draft-yasskin-wpack-signed-exchanges": {
         "authors": [
             "Jeffrey Yasskin"
         ],
-        "href": "https://wicg.github.io/webpackage/draft-yasskin-http-origin-signed-responses.html",
+        "href": "https://wicg.github.io/webpackage/draft-yasskin-wpack-signed-exchanges.html",
         "title": "Signed HTTP Exchanges",
         "status": "ED",
         "publisher": "IETF"
@@ -131,7 +131,7 @@ spec: draft-thomson-http-mice; urlPrefix: https://tools.ietf.org/html/draft-thom
 spec: draft-yasskin-wpack-bundled-exchanges; urlPrefix: https://wicg.github.io/webpackage/draft-yasskin-wpack-bundled-exchanges.html#
     type: dfn
         text: parsing a CBOR item; url: parse-known-length
-spec: draft-yasskin-http-origin-signed-responses; urlPrefix: https://wicg.github.io/webpackage/draft-yasskin-http-origin-signed-responses.html#
+spec: draft-yasskin-wpack-signed-exchanges; urlPrefix: https://wicg.github.io/webpackage/draft-yasskin-wpack-signed-exchanges.html#
     type: dfn
         text: off-path attackers; url: seccons-off-path
         text: uncached response header; url: uncached-headers
@@ -160,7 +160,7 @@ spec:streams; type:interface; text:ReadableStream
 <em>This section is non-normative.</em>
 
 The Signed Exchanges specification
-[[draft-yasskin-http-origin-signed-responses]] describes a way to provide one or
+[[draft-yasskin-wpack-signed-exchanges]] describes a way to provide one or
 more signatures for an HTTP exchange and to check whether any of those
 signatures is trusted as authoritative for a particular origin. This
 specification describes how web browsers load those exchanges. It is expressed
@@ -296,7 +296,7 @@ add the following steps:
 
     </dl>
 
-    Note: The final [[draft-yasskin-http-origin-signed-responses]] will use a
+    Note: The final [[draft-yasskin-wpack-signed-exchanges]] will use a
     version of `` `1` ``, but this specification tracks what's actually
     implemented in browsers, which still uses draft versions.
 
@@ -757,7 +757,7 @@ concatenation of the following [=byte sequences=]:
 
     Note: Each draft of
     [[draft-yasskin-httpbis-origin-signed-exchanges-impl-02]] and the final RFC
-    for [[draft-yasskin-http-origin-signed-responses]] will use distinct context
+    for [[draft-yasskin-wpack-signed-exchanges]] will use distinct context
     strings.
 1. A single 0x00 byte which serves as a separator.
 1. A single 0x20 (SP) byte, representing the length of the next field.
@@ -1292,7 +1292,7 @@ To <dfn for="read buffer">Dump</dfn> a [=read buffer=] |input| to a
 
 # Security Considerations # {#seccons}
 
-The Security Considerations of [[draft-yasskin-http-origin-signed-responses]]
+The Security Considerations of [[draft-yasskin-wpack-signed-exchanges]]
 apply.
 
 ## Certificate Transparency ## {#seccons-ct}

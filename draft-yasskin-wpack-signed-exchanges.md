@@ -2,7 +2,7 @@
 coding: utf-8
 
 title: Signed HTTP Exchanges
-docname: draft-yasskin-http-origin-signed-responses-latest
+docname: draft-yasskin-wpack-signed-exchanges-latest
 category: std
 
 ipr: trust200902

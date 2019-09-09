@@ -274,6 +274,8 @@ steps, taking the `stream` as input.
    of a CBOR item from `stream` ({{parse-type-argument}}). If this is an error
    or `urlType` is not 3 (a CBOR text string), return a "format error".
 
+1. If `urlLength` is 65536 (64*1024) or greater, return a "format error".
+
 1. Let `fallbackUrlBytes` be the result of reading `urlLength` bytes from
    `stream`. If this is an error, return a "format error".
 

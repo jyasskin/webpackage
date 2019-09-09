@@ -134,6 +134,7 @@ spec: draft-yasskin-wpack-bundled-exchanges; urlPrefix: https://wicg.github.io/w
     type: dfn
         text: loading a bundle's metadata; url: semantics-load-metadata
         text: parsing a CBOR item; url: parse-known-length
+        text: signed-subset rule; url: signatures-section
         for: bundle
             text: index section; url: index-section
 spec: draft-yasskin-http-origin-signed-responses; urlPrefix: https://wicg.github.io/webpackage/draft-yasskin-http-origin-signed-responses.html#
@@ -313,40 +314,36 @@ add the following steps:
     version of `` `1` ``, but this specification tracks what's actually
     implemented in browsers, which still uses draft versions.
 
-6. If the [=bundle version=] of |actualResponse| is:
+6. If the [=bundle version=] of |actualResponse| is not undefined:
 
-    <dl class="switch">
-    : undefined
-    :: Do nothing.
+    1. Let |report| be the result of [=create a new bundle report=]
+        with |request| and |actualResponse|.
+    1. Let |parsedBundle| be the result of [=parsing a bundle=] from
+        |actualResponse| in the context of |request|'s [=request/client=],
+        reporting to |report|.
+    1. If the [=bundle version=] of |actualResponse| is not `"b1"` but
+        |parsedBundle| is a [=bundle=], set |parsedBundle| to a "version error"
+        with a fallback URL of its [=bundle/manifest=]'s
+        {{WebAppManifest/start_url}}.
+    1. If |parsedBundle| is an error:
+        1. Run [=queue a bundle report=] |report| with |parsedBundle| as the
+            result.
+        1. If |parsedBundle| isn't a "version error", return a [=network error=].
+        1. Assert: |parsedBundle| has a fallback URL
+        1. Let |fallbackUrl| be |parsedBundle|'s fallback URL.
+        1. Set |actualResponse|'s [=status=] to `303`.
+        1. [=header list/Set=] |actualResponse|'s `` `Location` `` header to the
+            [=ASCII encoding=] of the [=URL serializer|serialization=] of
+            |fallbackUrl|.
 
-    : `"b1"`
-    ::
-        1. Let |report| be the result of [=create a new bundle report=]
-            with |request| and |actualResponse|.
-        1. Let |parsedBundle| be the result of [=parsing a bundle=] from
-            |actualResponse| in the context of |request|'s [=request/client=],
-            reporting to |report|.
-        1. If |parsedBundle| is not a [=bundle=], run
-            [=queue a bundle report=] |report| with
-            |parsedBundle| as the result, and return a [=network error=].
+    1. Otherwise:
         1. [=In parallel=], [=wait and queue a bundle report for=] |parsedBundle| and
             |report|.
         1. Set |actualResponse|'s [=status=] to `303`.
         1. [=header list/Set=] |actualResponse|'s `` `Location` `` header to
             the [=ASCII encoding=] of the [=URL serializer|serialization=]
-            of |parsedBundle|'s [=bundle/manifest=]'s {{webappmanifest/start_url}}.
+            of |parsedBundle|'s [=bundle/manifest=]'s {{WebAppManifest/start_url}}.
         1. Set |request|'s [=request/stashed bundle=] to |parsedBundle|.
-
-    : Anything else
-    ::
-        1. Let |fallbackUrlBytes| be the result of [=extracting the bundle
-            fallback URL=] from |actualResponse|.
-        1. If |fallbackUrlBytes| is a failure, return a [=network error=].
-        1. Set |actualResponse|'s [=status=] to `303`.
-        1. [=header list/Set=] |actualResponse|'s `` `Location` `` header to
-            |fallbackUrlBytes|.
-
-    </dl>
 
     Note: The final [[draft-yasskin-wpack-bundled-exchanges]] will use a version
     of `` `1` ``, but this specification tracks what's actually implemented in
@@ -391,7 +388,7 @@ A bundle is a [=struct=] with the following items:
 
 <ul dfn-for="bundle">
 
-* <dfn export>manifest</dfn>, a {{WebAppManifest}}.
+* <dfn export>manifest</dfn>, a {{webappmanifest}}.
 * <dfn export>exchanges</dfn>, a [=map=] whose keys are [=URLs=] and whose
     values are either [=promised responses=] or [=Variant-negotiated response
     maps=].
@@ -536,6 +533,7 @@ A bundle report is a [=struct=] with the following items:
     "<dfn>`non_secure_distributor`</dfn>", "<dfn>`parse_error`</dfn>",
     "<dfn>`invalid_integrity_header`</dfn>",
     "<dfn>`signature_verification_error`</dfn>",
+    "<dfn>`version_error`</dfn>",
     "<dfn>`cert_verification_error`</dfn>", "<dfn>`cert_fetch_error`</dfn>",
     "<dfn>`cert_parse_error`</dfn>",
 : <dfn>outer request</dfn>
@@ -543,17 +541,11 @@ A bundle report is a [=struct=] with the following items:
 : <dfn>outer response</dfn>
 :: The [=response=] which the user agent received from the server.
 : <dfn>inner URL</dfn>
-:: The logical [=URL=] of the bundle, if available. Otherwise, an empty
-    string.
-: <dfn>cert URL list</dfn>
-:: The list of [=URLs=] in "`cert-url`" parameters for the bundle's
-    signatures, if available. Otherwise, an empty list.
+:: The bundle's [=bundle/manifest=]'s {{WebAppManifest/start_url}}, if
+    available. Otherwise, an empty string.
 : <dfn>server IP</dfn>
-:: The IP address of the server from which the user agent received the signed
-    exchange, if available. Otherwise, an empty string.
-: <dfn>cert server IP list</dfn>
-:: The list of IP addresses of the servers from which the user agent received
-    the certificates listed in [=bundle report/cert URL list=].
+:: The IP address of the server from which the user agent received the bundle,
+    if available. Otherwise, an empty string.
 
 </dl>
 

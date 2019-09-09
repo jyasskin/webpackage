@@ -12,5 +12,5 @@ else
 	    -b master https://github.com/martinthomson/i-d-template $(LIBDIR)
 endif
 
-%.html: %.bs
+%.html: %.bs *.bs
 	bikeshed spec $<

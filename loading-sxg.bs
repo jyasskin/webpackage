@@ -118,6 +118,8 @@ following steps
     : `b3`
     :: the result of [=parsing b3 CBOR headers=] given |headerBytes| and
         |requestUrl|.
+
+    </dl>
 1. If |parsedSignature| [=exchange signature/does not establish cross-origin
     trust=] for |parsedExchange|, return
     "[=signed exchange report/cert_verification_error=]".

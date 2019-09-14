@@ -384,36 +384,6 @@ cross-origin trust">establishes cross-origin trust</dfn> in an [=exchange=]
     return "untrusted".
 1. Return "trusted".
 
-<h3 algorithm id="trusting-certificate">Establishing trust in a certificate</h3>
-
-The [=certificate chain=] |chain| <dfn for="certificate chain" lt="has a trusted
-leaf|does not have a trusted leaf">has a trusted leaf</dfn> for an [=origin=]
-|origin| if the following steps return `trusted`:
-
-1. Let |leaf| be |chain|'s [=certificate chain/leaf=].
-1. Attempt to build a trustworthy path from |leaf|'s [=augmented
-    certificate/certificate=] to a trusted root with
-
-    * |chain|,
-    * |leaf|'s [=augmented certificate/OCSP response=],
-    * any SCTs from
-        * |leaf|'s [=augmented certificate/SCT=].
-        * An OCSP extension in |leaf|'s [=augmented certificate/OCSP response=].
-        * An X.509 extension in |leaf|'s [=augmented certificate/certificate=].
-
-    as input, using [[!RFC5280]] and any other conventions used in making TLS
-    ([[!RFC8446]]) connections. The UA SHOULD support Certificate Transparency
-    ([[RFC6962]]) for this check. (See [[#seccons-ct]].) The UA MUST check that
-    it has evidence the |leaf|'s [=augmented certificate/certificate=] was not
-    revoked 7 or more days ago (for example using the |leaf|'s [=augmented
-    certificate/OCSP response=]). If no such path can be built, return
-    `untrusted`.
-1. If |leaf|'s [=augmented certificate/certificate=] is not trusted for
-    |origin|'s [=origin/host=], return `untrusted`.
-1. If |leaf|'s [=certificate/extensions=] don't map a [=CanSignHttpExchanges=]
-    OID to the ASN.1/DER encoding of NULL (0x05 0x00), return `untrusted`.
-1. Return `trusted`.
-
 <h3 algorithm id="parse-b2-cbor-headers">Parsing b2 CBOR headers</h3>
 
 <dfn>Parsing b2 CBOR headers</dfn> from a [=byte sequence=] |headerBytes| and

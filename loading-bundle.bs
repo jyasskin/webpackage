@@ -158,10 +158,17 @@ The <dfn>valid cross-origin signatures</dfn> of a |bundleMetadata| are the
     1. Let |authority| be |authorities|[|vouchedSubset|["authority"]].
     1. If |vouchedSubset|["sig"] is not a valid signature of
         |vouchedSubset|["signed"] by |authority|, continue to the next subset.
-    1. Let |subset| be the result of  [=parsing a CBOR item|parsing
-        |vouchedSubset|["signed"] as a CBOR item=] matching the [=signed-subset
-        rule=].
-    1. If the [=list=] of |authority| followed by  [=does not have a trusted leaf=]
+    1. Let |subset| be the result of [=parsing a CBOR item=] from
+        |vouchedSubset|["signed"], matching the [=signed-subset rule=].
+    1. If the SHA-256 hash of |authority|["cert"] is not equal to
+        |subset|["auth-sha256"], continue to the next subset.
+    1. Let |origin| be the [=url/origin=] of |subset|["validity-url"].
+    1. If the [=certificate chain=] that is the concatenation of «|authority|»
+        and |authorities| [=does not have a trusted leaf=] for |origin|,
+        continue to the next subset.
+    1. [=set/Append=] to |result| a new [=trusted subset=] whose [=trusted
+        subset/origin=] is |origin| and whose [=trusted subset/hashes=] are
+        |subset|["subset-hashes"].
 1. Return |result|.
 
 <h3 algorithm id="create-new-bundle-report">Create a new bundle report</h3>

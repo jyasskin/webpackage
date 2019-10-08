@@ -128,7 +128,7 @@ A <dfn>trusted subset</dfn> is a [=struct=] with the following items:
 
 : <dfn>hashes</dfn>
 
-:: A [=map=] from [=URL=]s to a [=pair=] of a <a http-header>Variants</a> value
+:: A [=map=] from [=URL=]s to [=pairs=] of a <a http-header>Variants</a> value
     and a [=list=] of [=resource integrity=] [=structs=].
 
 </dl>
@@ -148,7 +148,7 @@ A <dfn>resource integrity</dfn> [=struct=] has the following items:
 </dl>
 
 The <dfn>valid cross-origin signatures</dfn> of a |bundleMetadata| are the
-[=set=] of [=trusted subsets=] returned by the following steps:
+[=trusted subsets=] in the [=set=] returned by the following steps:
 
 1. Let |result| be a [=set=] of [=trusted subsets=], initially empty.
 1. If |bundleMetadata| does not contain both an "authorities" and a
@@ -158,6 +158,10 @@ The <dfn>valid cross-origin signatures</dfn> of a |bundleMetadata| are the
     1. Let |authority| be |authorities|[|vouchedSubset|["authority"]].
     1. If |vouchedSubset|["sig"] is not a valid signature of
         |vouchedSubset|["signed"] by |authority|, continue to the next subset.
+
+        Issue: We need to specify which signature algorithm corresponds to each
+        possible kind of authority. Initially, that's just X.509 EC
+        certificates.
     1. Let |subset| be the result of [=parsing a CBOR item=] from
         |vouchedSubset|["signed"], matching the [=signed-subset rule=].
     1. If the SHA-256 hash of |authority|["cert"] is not equal to

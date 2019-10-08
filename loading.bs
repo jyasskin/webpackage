@@ -169,13 +169,14 @@ spec:streams; type:interface; text:ReadableStream
 
 <em>This section is non-normative.</em>
 
-The Signed Exchanges specification
-[[draft-yasskin-http-origin-signed-responses]] describes a way to provide one or
-more signatures for an HTTP exchange and to check whether any of those
-signatures is trusted as authoritative for a particular origin. This
-specification describes how web browsers load those exchanges. It is expressed
-as several monkeypatches to the [[FETCH]] specification which call algorithms
-defined here.
+The Bundled Exchanges specification [[draft-yasskin-wpack-bundled-exchanges]]
+describes a way to provide several HTTP exchanges in a single resource. The
+Signed Exchanges specification [[draft-yasskin-http-origin-signed-responses]]
+describes a way to provide one or more signatures for an HTTP exchange and to
+check whether any of those signatures is trusted as authoritative for a
+particular origin. This specification describes how web browsers load those
+resources. It is expressed as several monkeypatches to the [[FETCH]]
+specification which call algorithms defined here.
 
 ## Overview ## {#overview}
 
@@ -388,7 +389,7 @@ A bundle is a [=struct=] with the following items:
 
 <ul dfn-for="bundle">
 
-* <dfn export>manifest</dfn>, a {{webappmanifest}}.
+* <dfn export>manifest</dfn>, a {{WebAppManifest}}.
 * <dfn export>exchanges</dfn>, a [=map=] whose keys are [=URLs=] and whose
     values are either [=promised responses=] or [=Variant-negotiated response
     maps=].

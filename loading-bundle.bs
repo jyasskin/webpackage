@@ -80,12 +80,38 @@ report/result=] as described by the following steps
 1. Let |crossOriginSubsets| be the [=valid cross-origin signatures=] of
     |bundleMetadata|.
 
+1. Let |manifest| be an initially-null [=processed manifest=].
+
+1. If |bundleMetadata| has a "manifest" key:
+
+    Note: These steps are based on the [=steps for obtaining a manifest=].
+
+    1. Let |request| be a new [=request=] with its fields set as follows:
+        * Its [=request/client=] is |client|.
+        * Its [=request/URL=] is |bundleManifest|["manifest"].
+        * Its [=request/mode=] is "cors".
+
+    1. Let |manifestResponse| be the result of [=raw-fetching a nested
+        resource=] using |request|, |bundleMetadata|, and |stream|.
+
+    1. If |manifestResponse| is a network error, abort these sub-steps.
+
+    1. Let |text| be the result of [=UTF-8 decoding=] |manifestResponse|'s
+        [=response/body=].
+
+    1. Set |manifest| to the result of [=processing a manifest=] given |text|,
+        |bundleMetadata|["manifest"], and |bundleMetadata|["primaryUrl"].
+
+    1. If |manifest|'s {{WebAppManifest/start_url}} is not [=url/equal=] to
+        |bundleMetadata|["primaryUrl"], return [=bundle
+        report/inconsistent_start_url_error=].
+
+1. If |manifest| is null, set it to a new [=processed manifest=] with a
+    {{WebAppManifest/start_url}} of |bundleMetadata|["primaryUrl"].
+
 1. Let |bundle| be a new [=bundle=].
 
-1.
-
-1. Set |bundle|'s [=bundle/manifest=]'s {{WebAppManifest/start_url}} to
-    |bundleMetadata|["primaryUrl"].
+1. Set |bundle|'s [=bundle/manifest=] to |manifest|.
 
 1. Convert ResponseMetadata to promises.
 
@@ -174,6 +200,51 @@ The <dfn>valid cross-origin signatures</dfn> of a |bundleMetadata| are the
         subset/origin=] is |origin| and whose [=trusted subset/hashes=] are
         |subset|["subset-hashes"].
 1. Return |result|.
+
+<h3 algorithm id="raw-fetch-nested">Raw-fetching a nested resource</h3>
+
+This algorithm is the guts of pulling a resource out of a bundle. It's a component of the higher-level operations.
+
+<dfn>Raw-fetching a nested resource</dfn> using a [=request=] |request|, a
+[=map=] of metadata, |bundleMetadata| returned by [=Load a bundle’s metadata=],
+and a [=read buffer=] |stream| that holds the bundle, returns the result of the
+following steps:
+
+1. Let |requestUrl| be |request|'s [=request/URL=].
+1. If |bundleMetadata|["requests"] does not [=map/contain=] |requestUrl|, return
+    a [=network error=].
+1. Let |responseMetadata| be an initially-null opaque `ResponseMetadata`
+    structure.
+
+1. Switch on the type of |bundleMetadata|["requests"][|requestUrl|]:
+
+    <dl class="switch">
+        <dt>A single `ResponseMetadata`</dt>
+        <dd>Set |responseMetadata| to that value.</dd>
+
+        <dt>A parsed <a http-header>Variants</a> header value |variants| and a
+        map |responses|</dt>
+        <dd>
+            1. Let |acceptable-responses| be the [=list=] of lists returned by
+                the [=Variants cache behavior=] algorithm, run over |request|'s
+                [=request/header list=] and using |variants| as the
+                <var ignore>variants-header</var> value that would have been
+                derived from the <var ignore>stored-responses</var> value.
+
+                Issue: We should refactor the [=Variants cache behavior=]
+                algorithm so we can pass the variants value instead of a list
+                of responses.
+
+            1. For each |acceptable-response| in |acceptable-responses|, if
+                |responses|[|acceptable-response|] [=map/exists=], set |responseMetadata| to that value.
+        </dd>
+    </dl>
+
+1. If |responseMetadata| is still null, return a [=network error=]. No
+    acceptable response was present.
+
+1. Return the result of [=loading a response from a bundle=] |stream| passing
+    |request| and |responseMetadata|.
 
 <h3 algorithm id="create-new-bundle-report">Create a new bundle report</h3>
 To <dfn>create a new bundle report</dfn> with |request| and

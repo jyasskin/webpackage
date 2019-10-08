@@ -133,6 +133,7 @@ spec: draft-thomson-http-mice; urlPrefix: https://tools.ietf.org/html/draft-thom
 spec: draft-yasskin-wpack-bundled-exchanges; urlPrefix: https://wicg.github.io/webpackage/draft-yasskin-wpack-bundled-exchanges.html#
     type: dfn
         text: loading a bundle's metadata; url: semantics-load-metadata
+        text: loading a response from a bundle; url: semantics-load-response
         text: parsing a CBOR item; url: parse-known-length
         text: signed-subset rule; url: signatures-section
         for: bundle
@@ -535,6 +536,7 @@ A bundle report is a [=struct=] with the following items:
     "<dfn>`invalid_integrity_header`</dfn>",
     "<dfn>`signature_verification_error`</dfn>",
     "<dfn>`version_error`</dfn>",
+    "<dfn>`inconsistent_start_url_error`</dfn>",
     "<dfn>`cert_verification_error`</dfn>", "<dfn>`cert_fetch_error`</dfn>",
     "<dfn>`cert_parse_error`</dfn>",
 : <dfn>outer request</dfn>

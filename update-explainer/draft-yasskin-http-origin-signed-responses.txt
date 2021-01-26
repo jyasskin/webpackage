@@ -4,8 +4,8 @@
 
 Network Working Group                                         J. Yasskin
 Internet-Draft                                                    Google
-Intended status: Standards Track                        17 November 2020
-Expires: 21 May 2021
+Intended status: Standards Track                         26 January 2021
+Expires: 30 July 2021
 
 
                          Signed HTTP Exchanges
@@ -50,11 +50,11 @@ Status of This Memo
    time.  It is inappropriate to use Internet-Drafts as reference
    material or to cite them other than as "work in progress."
 
-   This Internet-Draft will expire on 21 May 2021.
+   This Internet-Draft will expire on 30 July 2021.
 
 Copyright Notice
 
-   Copyright (c) 2020 IETF Trust and the persons identified as the
+   Copyright (c) 2021 IETF Trust and the persons identified as the
    document authors.  All rights reserved.
 
    This document is subject to BCP 78 and the IETF Trust's Legal
@@ -1996,7 +1996,7 @@ Accept-Signature: ..., ed25519key; **
               JSON Data Structures", RFC 8610, DOI 10.17487/RFC8610,
               June 2019, <https://www.rfc-editor.org/info/rfc8610>.
 
-   [FETCH]    WHATWG, "Fetch", November 2020,
+   [FETCH]    WHATWG, "Fetch", January 2021,
               <https://fetch.spec.whatwg.org/>.
 
    [I-D.ietf-httpbis-header-structure]
@@ -2106,7 +2106,7 @@ Accept-Signature: ..., ed25519key; **
               Version 1.3", RFC 8446, DOI 10.17487/RFC8446, August 2018,
               <https://www.rfc-editor.org/info/rfc8446>.
 
-   [URL]      WHATWG, "URL", November 2020,
+   [URL]      WHATWG, "URL", January 2021,
               <https://url.spec.whatwg.org/>.
 
 9.2.  Informative References
@@ -2142,8 +2142,8 @@ Accept-Signature: ..., ed25519key; **
    [I-D.ietf-httpbis-cache]
               Fielding, R., Nottingham, M., and J. Reschke, "HTTP
               Caching", Work in Progress, Internet-Draft, draft-ietf-
-              httpbis-cache-12, 2 October 2020, <http://www.ietf.org/
-              internet-drafts/draft-ietf-httpbis-cache-12.txt>.
+              httpbis-cache-14, 12 January 2021, <http://www.ietf.org/
+              internet-drafts/draft-ietf-httpbis-cache-14.txt>.
 
    [I-D.ietf-httpbis-http2-secondary-certs]
               Bishop, M., Sullivan, N., and M. Thomson, "Secondary
